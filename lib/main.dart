@@ -34,7 +34,7 @@ class Tile extends StatelessWidget {
       width: 60,
       height: 60,
       alignment: Alignment.center,
-      margin: const EdgeInsets.all(4),
+      margin: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
         color: switch (hitType) {
@@ -63,18 +63,18 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  final Game game = Game();
+  final Game _game = Game();
 
   void submitGuess(String guess) {
     if (guess.length != 5) return;
 
-    if (!game.isLegalGuess(guess)) {
+    if (!_game.isLegalGuess(guess)) {
       print("Palavra inválida");
       return;
     }
 
     setState(() {
-      game.guess(guess);
+      _game.guess(guess);
     });
   }
 
@@ -89,7 +89,7 @@ class _GamePageState extends State<GamePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                for (var guess in game.guesses)
+                for (var guess in _game.guesses)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -111,19 +111,30 @@ class _GamePageState extends State<GamePage> {
   }
 }
 
-class GuessInput extends StatelessWidget {
-  GuessInput({super.key, required this.onSubmitGuess});
+class GuessInput extends StatefulWidget {
+  const GuessInput({super.key, required this.onSubmitGuess});
 
   final void Function(String) onSubmitGuess;
 
-  final TextEditingController _textEditingController = TextEditingController();
+  @override
+  State<GuessInput> createState() => _GuessInputState();
+}
 
+class _GuessInputState extends State<GuessInput> {
+  final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
   void _onSubmit() {
-    onSubmitGuess(_textEditingController.text);
-    _textEditingController.clear();
+    widget.onSubmitGuess(_controller.text);
+    _controller.clear();
     _focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -134,23 +145,21 @@ class GuessInput extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              maxLength: 5,
+              controller: _controller,
               focusNode: _focusNode,
+              maxLength: 5,
               autofocus: true,
               decoration: const InputDecoration(
+                counterText: "",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(35)),
                 ),
               ),
-              controller: _textEditingController,
-              onSubmitted: (String value) {
-                _onSubmit();
-              },
+              onSubmitted: (_) => _onSubmit(),
             ),
           ),
         ),
         IconButton(
-          padding: EdgeInsets.zero,
           icon: const Icon(Icons.arrow_circle_up),
           onPressed: _onSubmit,
         ),
@@ -158,4 +167,3 @@ class GuessInput extends StatelessWidget {
     );
   }
 }
-
